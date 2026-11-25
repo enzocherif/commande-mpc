@@ -1,0 +1,41 @@
+// Schéma de Contrôle MPC
+digraph {
+	A [label="Initialisation
+- Paramètres MPC (N=20, poids, contraintes)
+- Variables (positions leader & follower, historique)"]
+	B [label="Boucle principale
+Tant que le follower est actif"]
+	C [label="Mise à jour des états
+- Lire positions via ROS
+- Calculer position cible:
+  x_cible = x_leader - d_opt*cos(theta_leader)
+  y_cible = y_leader - d_opt*sin(theta_leader)"]
+	D [label="Génération des trajectoires
+Pour chaque action candidate (v, ω):
+- Simuler l’évolution sur N pas
+  x_t+1 = x_t + v*cos(theta_t)*dt
+  y_t+1 = y_t + v*sin(theta_t)*dt
+  theta_t+1 = theta_t + ω*dt"]
+	E [label="Évaluation des trajectoires
+Calcul du coût J:
+J = Σ [w_p*(x_t - x_cible)² + w_p*(y_t - y_cible)²
+    + w_θ*(theta_t - theta_cible)² + w_u*u_t²]
+Contraintes:
+- Distance follower-leader entre 0.5m et 1.5m
+- Distance prédite < 1.4m"]
+	F [label="Sélection de l'action optimale
+Choisir (v, ω) minimisant J"]
+	G [label="Publication de la commande
+- Publier Twist sur ROS
+- Filtrer les commandes pour lisser"]
+	H [label="Mise à jour des variables
+Retour à la mise à jour des états"]
+	A -> B
+	B -> C [label="Début boucle"]
+	C -> D
+	D -> E
+	E -> F
+	F -> G
+	G -> H
+	H -> C [label="Itération"]
+}
